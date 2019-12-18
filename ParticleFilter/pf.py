@@ -34,14 +34,7 @@ class ParticleFilter(object):
             self.weights.append(w)
         self.observations = []
         self.landmarks = []
-        self.landmarks.append(Landmark(10 , 10, 1))
-        # self.landmarks.append(Landmark(15 , 10, 2))
-        # self.landmarks.append(Landmark(20 , 20, 3))
-        self.landmarks.append(Landmark(-20,-20, 4))
-        self.landmarks.append(Landmark(-25,-22, 5))
-        self.landmarks.append(Landmark(12 ,  6, 6))
-        self.landmarks.append(Landmark(7  ,  7, 7))
-
+        
     def predict(self, delta_t, std_pos, velocity, yaw_rate):
         self.parts = deepcopy(self.particles)
         self.particles = deepcopy(self.parts)
@@ -54,6 +47,7 @@ class ParticleFilter(object):
                 self.particles[i].x += delta_t * velocity * cos(self.particles[i].theta)
                 self.particles[i].y += delta_t * velocity * sin(self.particles[i].theta)
             self.particles[i].theta += delta_t * yaw_rate
+            # Add position noise
             self.particles[i].x = np.random.normal(self.particles[i].x, std_pos[0], 1)
             self.particles[i].y = np.random.normal(self.particles[i].y, std_pos[1], 1)
 
@@ -85,7 +79,6 @@ class ParticleFilter(object):
             obs_M = []
 
             # For now we use map-observations, not POV versions
-            
             for obs in self.observations:
                 # TODO implement prediction of observation (for now just use "real values")
                 obs_M.append(Landmark(obs.x - self.particles[ipart].x, obs.y - self.particles[ipart].y, 0))
@@ -110,7 +103,6 @@ class ParticleFilter(object):
         probs = [part.weight for part in self.particles]
         probs /= np.asarray(probs).sum()
         self.particles = list(np.random.choice(self.particles, size=len(self.particles), p=probs))
-        #c = deepcopy(self.particles)
         new_l = []
         for p in self.particles:
             new_l.append(deepcopy(p))
@@ -125,8 +117,17 @@ if __name__ == "__main__":
     velocity = gt[2]       # m/s
     theta    = gt[3]       # rad 
     yaw_rate = gt[4]       # rad/s
-    std_pos  = [1,1]                 # sensor noise stddev
+    std_pos  = [1,1]       # sensor noise stddev
     N_STEPS  = 2
+    
+    # Add some landmarks
+    PF.landmarks.append(Landmark(10 , 10, 1))
+    PF.landmarks.append(Landmark(15 , 10, 2))
+    PF.landmarks.append(Landmark(20 , 20, 3))
+    PF.landmarks.append(Landmark(-20,-20, 4))
+    PF.landmarks.append(Landmark(-25,-22, 5))
+    PF.landmarks.append(Landmark(12 ,  6, 6))
+    PF.landmarks.append(Landmark(7  ,  7, 7))
 
     # Initially, we observe everything exactly (with respect to vehicle), TODO add noise to observation
     for l in PF.landmarks:
@@ -160,7 +161,7 @@ if __name__ == "__main__":
         ax[ip].scatter(gt[0],gt[1],color='b')
         ax[ip].set_xlim([-30, 30])
         ax[ip].set_ylim([-30, 30])
-        PF.updateWeights(std_landmark = [5,5])
+        PF.updateWeights(std_landmark = [0.5,0.5])
         PF.resample()
         maxweight = max([x.weight for x in PF.particles])
         best_guess = [x for x in PF.particles if x.weight==maxweight][0]
