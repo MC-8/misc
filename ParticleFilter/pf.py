@@ -3,6 +3,8 @@ from math import sin, cos, exp
 from collections import namedtuple
 from matplotlib import pyplot as plt
 from dataclasses import dataclass
+from copy import deepcopy
+from matplotlib.animation import FuncAnimation
 
 @dataclass
 class Particle:
@@ -17,7 +19,7 @@ class Landmark:
     y: float
     id: int
     
-EPS = 1E-6
+EPS = 1E-3
 
 class ParticleFilter(object):
     def __init__(self, x, y, theta, std, n_particles):
@@ -32,11 +34,18 @@ class ParticleFilter(object):
             self.weights.append(w)
         self.observations = []
         self.landmarks = []
-        self.landmarks.append(Landmark(10, 10, 1))
-        self.landmarks.append(Landmark(15, 10, 2))
-        self.landmarks.append(Landmark(20, 20, 3))
+        self.landmarks.append(Landmark(10 , 10, 1))
+        # self.landmarks.append(Landmark(15 , 10, 2))
+        # self.landmarks.append(Landmark(20 , 20, 3))
+        self.landmarks.append(Landmark(-20,-20, 4))
+        self.landmarks.append(Landmark(-25,-22, 5))
+        self.landmarks.append(Landmark(12 ,  6, 6))
+        self.landmarks.append(Landmark(7  ,  7, 7))
 
     def predict(self, delta_t, std_pos, velocity, yaw_rate):
+        self.parts = deepcopy(self.particles)
+        self.particles = deepcopy(self.parts)
+        self.parts = []
         for i in range(len(self.particles)):
             if abs(yaw_rate > 1e-6):
                 self.particles[i].x = self.particles[i].x  +  velocity / yaw_rate * (sin(self.particles[i].theta + yaw_rate * delta_t) - sin(self.particles[i].theta))
@@ -45,8 +54,8 @@ class ParticleFilter(object):
                 self.particles[i].x = self.particles[i].x  +  delta_t * velocity * cos(self.particles[i].theta)
                 self.particles[i].y = self.particles[i].y  +  delta_t * velocity * sin(self.particles[i].theta)
             self.particles[i].theta = self.particles[i].theta  +  delta_t * yaw_rate
-            self.particles[i].x = self.particles[i].x + np.random.normal(self.particles[i].x, std_pos[0], 1)
-            self.particles[i].y = self.particles[i].y + np.random.normal(self.particles[i].y, std_pos[1], 1)
+            self.particles[i].x = np.random.normal(self.particles[i].x, std_pos[0], 1)
+            self.particles[i].y = np.random.normal(self.particles[i].y, std_pos[1], 1)
 
     def dataAssociation(self, predicted, observations):
         for iobs in range(len(observations)):
@@ -99,51 +108,57 @@ class ParticleFilter(object):
         probs = [part.weight for part in self.particles]
         probs /= np.asarray(probs).sum()
         self.particles = list(np.random.choice(self.particles, size=len(self.particles), p=probs))
+        c = deepcopy(self.particles)
+        new_l = []
+        for p in c:
+            new_l.append(deepcopy(p))
+        self.particles = new_l
 
 
 if __name__ == "__main__":
-    gt = [2, -2, 0, 0, 0] # ground truth: x,y,velocity,theta,yawrate
-    PF = ParticleFilter(gt[0], gt[1], gt[2], [1,1,1], 1000)
+    gt = [15, -12, 0, 0, 0] # ground truth: x,y,velocity,theta,yawrate
+    PF = ParticleFilter(gt[0], gt[1], gt[2], [20,20,1], 500)
     
     dt = 1                           # time step [s]
     velocity = gt[2]       # m/s
     theta    = gt[3]       # rad 
     yaw_rate = gt[4]       # rad/s
     std_pos  = [1,1]                 # sensor noise stddev
-    N_STEPS  = 100
+    N_STEPS  = 2
 
     # Initially, we observe everything exactly (with respect to vehicle), TODO add noise to observation
     for l in PF.landmarks:
-        PF.observations.append(Landmark(l.x - gt[0], l.y - gt[1], 0))
+        PF.observations.append(Landmark(l.x + gt[0], l.y + gt[1], 0))
 
     def update_obs(obs, delta_t, velocity, theta):
         # Observation moves on the opposite side of the particle 
         for o in obs:
-            o.x = o.x - delta_t*velocity*cos(theta)
-            o.y = o.y - delta_t*velocity*sin(theta)
+            o.x = o.x + delta_t*velocity*cos(theta)
+            o.y = o.y + delta_t*velocity*sin(theta)
 
     def update_ground_truth(gt, delta_t):
         gt[0] += delta_t*gt[2]*cos(gt[3])
         gt[1] += delta_t*gt[2]*sin(gt[3])
         gt[3] += delta_t*gt[4]
 
-    for i in range(N_STEPS):
+    fig, ax = plt.subplots(N_STEPS)
+    fig.set_tight_layout(True)
+    for ip in range(N_STEPS):
+
+        PF.predict(delta_t = dt, std_pos = std_pos, velocity = velocity, yaw_rate = yaw_rate)
+        # Update everything
         xs = [p.x for p in PF.particles]
         ys = [p.y for p in PF.particles]
-        plt.scatter(xs,ys,color='r')
-        
-        oxs = [p.x for p in PF.observations]
-        oys = [p.y for p in PF.observations]
-        plt.scatter(oxs,oys,color='b')
-
+        ax[ip].scatter(xs,ys,color='r')
         lxs = [p.x for p in PF.landmarks]
         lys = [p.y for p in PF.landmarks]
-        plt.scatter(lxs,lys,color='k')
-        plt.show()
-        
-        # Update everything
-        PF.predict(delta_t = dt, std_pos = std_pos, velocity = velocity, yaw_rate = yaw_rate)
-        PF.updateWeights(std_landmark = [2,2])
+        ax[ip].scatter(lxs,lys,color='k')
+        ax[ip].grid()
+               
+        ax[ip].scatter(gt[0],gt[1],color='b')
+        ax[ip].set_xlim([-30, 30])
+        ax[ip].set_ylim([-30, 30])
+        PF.updateWeights(std_landmark = [0.5,0.5])
         PF.resample()
         maxweight = max([x.weight for x in PF.particles])
         best_guess = [x for x in PF.particles if x.weight==maxweight][0]
@@ -151,6 +166,7 @@ if __name__ == "__main__":
         print(f"Best guess is \t{best_guess.x}, {best_guess.y}\n")
         update_ground_truth(gt, delta_t = dt)
         update_obs(PF.observations, delta_t=dt, velocity=velocity, theta=theta)
-    pass
+    fig.show()
+    plt.show()
 
 
