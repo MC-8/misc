@@ -48,12 +48,12 @@ class ParticleFilter(object):
         self.parts = []
         for i in range(len(self.particles)):
             if abs(yaw_rate > 1e-6):
-                self.particles[i].x = self.particles[i].x  +  velocity / yaw_rate * (sin(self.particles[i].theta + yaw_rate * delta_t) - sin(self.particles[i].theta))
-                self.particles[i].y = self.particles[i].y  +  velocity / yaw_rate * (cos(self.particles[i].theta) - cos(self.particles[i].theta + yaw_rate * delta_t))
+                self.particles[i].x += velocity / yaw_rate * (sin(self.particles[i].theta + yaw_rate * delta_t) - sin(self.particles[i].theta))
+                self.particles[i].y += velocity / yaw_rate * (cos(self.particles[i].theta) - cos(self.particles[i].theta + yaw_rate * delta_t))
             else: 
-                self.particles[i].x = self.particles[i].x  +  delta_t * velocity * cos(self.particles[i].theta)
-                self.particles[i].y = self.particles[i].y  +  delta_t * velocity * sin(self.particles[i].theta)
-            self.particles[i].theta = self.particles[i].theta  +  delta_t * yaw_rate
+                self.particles[i].x += delta_t * velocity * cos(self.particles[i].theta)
+                self.particles[i].y += delta_t * velocity * sin(self.particles[i].theta)
+            self.particles[i].theta += delta_t * yaw_rate
             self.particles[i].x = np.random.normal(self.particles[i].x, std_pos[0], 1)
             self.particles[i].y = np.random.normal(self.particles[i].y, std_pos[1], 1)
 
@@ -85,8 +85,10 @@ class ParticleFilter(object):
             obs_M = []
 
             # For now we use map-observations, not POV versions
+            
             for obs in self.observations:
-                obs_M.append(Landmark(obs.x-self.particles[ipart].x, obs.y-self.particles[ipart].y, 0))
+                # TODO implement prediction of observation (for now just use "real values")
+                obs_M.append(Landmark(obs.x - self.particles[ipart].x, obs.y - self.particles[ipart].y, 0))
 
             self.dataAssociation(lmark_M, obs_M)
             
@@ -108,9 +110,9 @@ class ParticleFilter(object):
         probs = [part.weight for part in self.particles]
         probs /= np.asarray(probs).sum()
         self.particles = list(np.random.choice(self.particles, size=len(self.particles), p=probs))
-        c = deepcopy(self.particles)
+        #c = deepcopy(self.particles)
         new_l = []
-        for p in c:
+        for p in self.particles:
             new_l.append(deepcopy(p))
         self.particles = new_l
 
@@ -158,7 +160,7 @@ if __name__ == "__main__":
         ax[ip].scatter(gt[0],gt[1],color='b')
         ax[ip].set_xlim([-30, 30])
         ax[ip].set_ylim([-30, 30])
-        PF.updateWeights(std_landmark = [0.5,0.5])
+        PF.updateWeights(std_landmark = [5,5])
         PF.resample()
         maxweight = max([x.weight for x in PF.particles])
         best_guess = [x for x in PF.particles if x.weight==maxweight][0]
