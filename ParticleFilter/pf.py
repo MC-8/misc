@@ -113,7 +113,7 @@ if __name__ == "__main__":
     gt = [15, -12, 0, 0, 0] # ground truth: x,y,velocity,theta,yawrate
     PF = ParticleFilter(gt[0], gt[1], gt[2], [20,20,1], 500)
     
-    dt = 1                           # time step [s]
+    dt = 1                 # time step [s]
     velocity = gt[2]       # m/s
     theta    = gt[3]       # rad 
     yaw_rate = gt[4]       # rad/s
@@ -166,6 +166,8 @@ if __name__ == "__main__":
         
         PF.updateWeights(std_landmark = [0.5,0.5])
         PF.resample()
+        
+        
         maxweight = max([x.weight for x in PF.particles])
         best_guess = [x for x in PF.particles if x.weight==maxweight][0]
         
