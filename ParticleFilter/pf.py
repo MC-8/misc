@@ -47,7 +47,7 @@ class ParticleFilter(object):
                 self.particles[i].x += delta_t * velocity * cos(self.particles[i].theta)
                 self.particles[i].y += delta_t * velocity * sin(self.particles[i].theta)
             self.particles[i].theta += delta_t * yaw_rate
-            # Add position noise
+            # Add position noise (actually we should add uncertainty on velocity and yaw rate...)
             self.particles[i].x = np.random.normal(self.particles[i].x, std_pos[0], 1)
             self.particles[i].y = np.random.normal(self.particles[i].y, std_pos[1], 1)
 
@@ -73,7 +73,7 @@ class ParticleFilter(object):
             self.weights[ipart] = 1
             lmark_M = self.landmarks
             for lmark in self.landmarks:
-                # Make subset of landmarks depending on sensor range
+                # TODO Calculate predicted measurements. Use real values until now.
                 pass
 
             obs_M = []
@@ -88,16 +88,16 @@ class ParticleFilter(object):
             # Now that observations and landmarks are associated, compute the weight
             for obs in obs_M:
                 for lmark in lmark_M:
-                    sig_x = std_landmark[0]
-                    sig_y = std_landmark[1]
+                    sig_x = std_landmark[0] # Landmark measurement noise
+                    sig_y = std_landmark[1] # Landmark measurement noise
+                    if obs.id == lmark.id:
+                        exponent = -((obs.x - lmark.x) * (obs.x - lmark.x) / (2 * sig_x * sig_x) +
+                                    (obs.y - lmark.y) * (obs.y - lmark.y) / (2 * sig_y * sig_y)) 
 
-                    exponent = -((obs.x - lmark.x) * (obs.x - lmark.x) / (2 * sig_x * sig_x) +
-                                 (obs.y - lmark.y) * (obs.y - lmark.y) / (2 * sig_y * sig_y)) 
-
-                    Pxy = 1 / (2 * np.pi * sig_x * sig_y) * exp(exponent)
-                    if (Pxy < EPS): Pxy = EPS
-                    self.particles[ipart].weight *= Pxy
-                    self.weights[ipart]          *= Pxy
+                        Pxy = 1 / (2 * np.pi * sig_x * sig_y) * exp(exponent)
+                        if (Pxy < EPS): Pxy = EPS
+                        self.particles[ipart].weight *= Pxy
+                        self.weights[ipart]          *= Pxy
 
     def resample(self):
         probs = [part.weight for part in self.particles]
