@@ -118,7 +118,7 @@ if __name__ == "__main__":
     theta    = gt[3]       # rad 
     yaw_rate = gt[4]       # rad/s
     std_pos  = [1,1]       # sensor noise stddev
-    N_STEPS  = 2
+    N_STEPS  = 3
     
     # Add some landmarks
     PF.landmarks.append(Landmark(10 , 10, 1))
@@ -149,6 +149,8 @@ if __name__ == "__main__":
     for ip in range(N_STEPS):
 
         PF.predict(delta_t = dt, std_pos = std_pos, velocity = velocity, yaw_rate = yaw_rate)
+        update_obs(PF.observations, delta_t=dt, velocity=velocity, theta=theta)
+        
         # Update everything
         xs = [p.x for p in PF.particles]
         ys = [p.y for p in PF.particles]
@@ -161,14 +163,16 @@ if __name__ == "__main__":
         ax[ip].scatter(gt[0],gt[1],color='b')
         ax[ip].set_xlim([-30, 30])
         ax[ip].set_ylim([-30, 30])
+        
         PF.updateWeights(std_landmark = [0.5,0.5])
         PF.resample()
         maxweight = max([x.weight for x in PF.particles])
         best_guess = [x for x in PF.particles if x.weight==maxweight][0]
+        
         print(f"Ground truth is \t{gt[0]}, {gt[1]}\n")
         print(f"Best guess is \t{best_guess.x}, {best_guess.y}\n")
         update_ground_truth(gt, delta_t = dt)
-        update_obs(PF.observations, delta_t=dt, velocity=velocity, theta=theta)
+
     fig.show()
     plt.show()
 
