@@ -1,42 +1,51 @@
-# Definition for singly-linked list.
-class ListNode:
-    def __init__(self, x):
-        self.val = x
-        self.next = None
-
 class Solution:
-    def mergeTwoLists(self, l1: ListNode, l2: ListNode) -> ListNode:
-        l3 = None
-        lh = None
-        while l1 or l2:
-            if not l2 or (l1 and l1.val < l2.val):
-                if l3:
-                    l3.next = ListNode(l1.val)
-                    l3 = l3.next
-                else:
-                    l3 = ListNode(l1.val)
-                    lh = l3
-                l1 = l1.next
-            elif l2:
-                if l3:
-                    l3.next = ListNode(l2.val)
-                    l3 = l3.next
-                else:
-                    l3 = ListNode(l2.val)
-                    lh = l3
-                l2 = l2.next
-        
-        return lh
+    def generateParenthesis(self, n: int) -> [str]:
+        T = Tree()
+        T.generate_subtree(T.root, 1, 0, n)
+        T.backtrack('', T.root, n*2)
+        return list(T.solutions)
 
-l1 = ListNode(1)
-l1.next = ListNode(2)
-l1.next.next = ListNode(4)
-l2 = ListNode(1)
-l2.next = ListNode(3)
-l2.next.next = ListNode(4)
-x = Solution()
-y = x.mergeTwoLists(l1,l2)
+class Node(object):
+    def __init__(self, x: str):
+        self.val    = x
+        self.left   = None
+        self.right  = None
 
-while y:
-    print(y.val)
-    y = y.next
+class Tree(object):
+    def __init__(self):
+        self.root = Node('(')
+        self.solutions = set()
+    
+    def create_node(self, x:str):
+        return Node(x)
+
+    def generate_subtree(self, node, opened, closed, depth):
+        if depth==opened:
+            node.left  = None
+
+        if opened==closed:
+            node.right = None
+
+        if opened < depth:
+            node.left = Node('(')
+            self.generate_subtree(node.left, opened+1, closed, depth)
+
+        if closed < opened:
+            node.right = Node(')')
+            self.generate_subtree(node.right, opened, closed+1, depth)
+    
+    def backtrack(self, s, node, length):
+        if not node:
+            if len(s)==length: 
+                self.solutions.add(s)
+            return
+        s += node.val
+        self.backtrack(s, node.left, length)
+        self.backtrack(s, node.right, length)
+
+X = Solution()
+print(X.generateParenthesis(4))
+            
+
+
+
