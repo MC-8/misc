@@ -1,51 +1,18 @@
-class Solution:
-    def generateParenthesis(self, n: int) -> [str]:
-        T = Tree()
-        T.generate_subtree(T.root, 1, 0, n)
-        T.backtrack('', T.root, n*2)
-        return list(T.solutions)
+from typing import List
 
-class Node(object):
-    def __init__(self, x: str):
-        self.val    = x
-        self.left   = None
-        self.right  = None
+def try_annotation(x:str)->str:
+    return(x)
 
-class Tree(object):
-    def __init__(self):
-        self.root = Node('(')
-        self.solutions = set()
-    
-    def create_node(self, x:str):
-        return Node(x)
+def try_annotation_with_ok_return(x:str)-> List[int]:
+    return [1]
 
-    def generate_subtree(self, node, opened, closed, depth):
-        if depth==opened:
-            node.left  = None
+def try_annotation_with_wrong_return(x:str)-> List[int]:
+    y = (1,)
+    return y
 
-        if opened==closed:
-            node.right = None
-
-        if opened < depth:
-            node.left = Node('(')
-            self.generate_subtree(node.left, opened+1, closed, depth)
-
-        if closed < opened:
-            node.right = Node(')')
-            self.generate_subtree(node.right, opened, closed+1, depth)
-    
-    def backtrack(self, s, node, length):
-        if not node:
-            if len(s)==length: 
-                self.solutions.add(s)
-            return
-        s += node.val
-        self.backtrack(s, node.left, length)
-        self.backtrack(s, node.right, length)
-
-X = Solution()
-print(X.generateParenthesis(4))
-            
+print(try_annotation("nothing"))
+print(try_annotation_with_ok_return("ok"))
+print(try_annotation_with_wrong_return([1,2,3]))
 
 
 
