@@ -1,11 +1,8 @@
 from typing import Counter, List
 class Solution:
     def canJump(self, nums: List[int]) -> bool:
-        if 0 not in nums: return True
-        if len(nums)<2: return True
         zflag = False
         counter = 0
-        #if zflag: counter-=1
         for x in nums[-2::-1]:
             if zflag and (x>0 and x>counter):
                 zflag = False
