@@ -1,27 +1,40 @@
-from typing import Counter, List
+from typing import List
+from itertools import product
 class Solution:
-    def canJump(self, nums: List[int]) -> bool:
-        zflag = False
-        counter = 0
-        for x in nums[-2::-1]:
-            if zflag and (x>0 and x>counter):
-                zflag = False
-            if x==0 and not zflag:
-                zflag = True
-            counter = counter + 1 if zflag else 0
-
-        return not zflag
-
-
-X = Solution()
-print(X.canJump([2,3,1,1,4]))
-print(X.canJump([3,2,1,0,4]))
-print(X.canJump([2,0,0]))
-
-
-
-
-# 1 start from the end
-# If I find one or more zeros, keep looking until you find a value that is N#zeros+1,
-# if reach beginning without finding it return false
-# No zeros, end reachable
+    def isValidSudoku(self, board: List[List[str]]) -> bool:
+        valid = True
+        
+        # Do cells
+        for csr, csc in product(range(0, 7, 3), range(0, 7, 3)):
+            S = set()
+            # Add values
+            num_counter = 0
+            for dr, dc in product(range(3), range(3)):
+                if (val := board[csr+dr][csc+dc]) != ".":
+                    S.add(int(val))
+                    num_counter += 1
+            if len(S)!=num_counter: return False
+            
+        # Do rows
+        for csr in range(9):
+            S = set()
+            # Add values
+            num_counter = 0
+            for dc in range(9):
+                if (val := board[csr][dc]) != ".":
+                    S.add(int(val))
+                    num_counter += 1
+            if len(S)!=num_counter: return False
+        
+        # Do columns
+        for csc in range(9):
+            S = set()
+            # Add values
+            num_counter = 0
+            for dr in range(9):
+                if (val := board[dr][csc]) != ".":
+                    S.add(int(val))
+                    num_counter += 1
+            if len(S)!=num_counter: return False
+        
+        return valid
