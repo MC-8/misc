@@ -1,43 +1,39 @@
-from typing import List
-from collections import deque
-from itertools import product
-class Solution:
-    def threeSum(self, nums: List[int]) -> List[List[int]]:
-        solution_set = set()
-        couples_set = set()
-        x_set = set()
-        idx = 0
-        D = {}
-        for i in range(len(nums)):
-            D[nums[i]] = D.get(nums[i],0) + 1
-        while idx < len(nums)-2:
-            idy = idx+1
-            x = nums[idx]
-            if x in x_set:
-                idx+=1
-                continue
-            while idy < len(nums)-1:
-                y = nums[idy]
-                if (x,y) in couples_set or (y,x) in couples_set:
-                    idy+=1
-                    continue
-                z = -(x+y)
-                if ((z in D and ((z != x) and (z != y))) or 
-                   (((z==x) and (z==y)) and D.get(z)>2) or
-                   (((z==x) and (z!=y)) and D.get(z)>1) or 
-                   (((z!=x) and (z==y)) and D.get(z)>1)):
-                    sol = tuple(sorted([x,y,z]))
-                    couples_set.add((x,y))
-                    solution_set.add(sol)
-                    x_set.add(x)
-                idy+=1
-            idx+=1
-            
-        return [list(x) for x in solution_set]    
+class LRUCache:
+    def __init__(self, capacity: int):
+        self.cache          = {}
+        self.capacity   = capacity
 
-t1 = [-1, 0, 1, 2, -1, -4]
-X = Solution()
-print(X.threeSum(t1))
+    def get(self, key: int) -> int:
+        el = self.cache.pop(key, -1)
+        if el >-1:
+            self.cache[key] = el
+        return el
 
-t2 = [-2,0,0,2,2]
-print(X.threeSum(t2))
+    def put(self, key: int, value: int) -> None:
+        self.cache.pop(key, -1)
+        self.cache[key] = value
+        if len(self.cache)>self.capacity: 
+            self.cache.pop(next(iter(self.cache.keys())))
+
+from collections import OrderedDict
+# Your LRUCache object will be instantiated and called as such:
+# obj = LRUCache(capacity)
+# param_1 = obj.get(key)
+# obj.put(key,value)
+# cache = LRUCache(2)
+# cache.put(1, 1)
+# cache.put(2, 2)
+# print(cache.get(1))
+# cache.put(3, 3)
+# print(cache.get(2))
+# cache.put(4, 4)
+# print(cache.get(1))
+# print(cache.get(3))
+# print(cache.get(4))
+cache = LRUCache(2)
+cache.put(2, 1)
+cache.put(1, 1)
+cache.put(2, 3)
+cache.put(4, 1)
+print(cache.get(1))
+print(cache.get(2))
