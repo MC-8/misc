@@ -38,6 +38,7 @@ def Pconsumer_fcn(Pconn: Connection, loopCondition: Value):
         if Pconn.poll(0.1):
             _ = Pconn.recv()
             counter +=1
+    Pconn.close()
     print(f"Consumer msg: Received: {counter} messages\n")
 
 def Pproducer_fcn(Pconn: Connection, loopCondition: Value):
@@ -60,7 +61,6 @@ if __name__ == '__main__':
         consumer.start()
         sleep(t_experiment)
         loopCondition.value = 0
-        producer.join()
         consumer.join()
 
         print(f"Using Pipe")
@@ -75,7 +75,6 @@ if __name__ == '__main__':
         consumer.start()
         sleep(t_experiment)
         loopCondition.value = 0
-        producer.join()
         consumer.join()
-    
+
     print("Done.")
