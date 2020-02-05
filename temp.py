@@ -14,3 +14,4 @@ class Solution:
 X = Solution()
 print(X.topKFrequent([3,3,2,3,5,2,7],1))
 print(X.topKFrequent([3,3,2,3,5,2,7],2))
+from queue import Empty
