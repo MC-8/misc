@@ -1,25 +1,26 @@
-class Shark:
-    fish_type = "Shark"
-    counter = 0
-    
-    def __init__(self) -> None:
-        type(self).counter += 1
-    
-    def __del__(self) -> None:
-        type(self).counter -= 1
+# Definition for a binary tree node.
+from typing import List
+class TreeNode:
+    def __init__(self, x):
+        self.val = x
+        self.left = None
+        self.right = None
 
+class Solution:
+    def inorderTraversal(self, root: TreeNode) -> List[int]:
+        res = []
+        if root:
+            res += self.inorderTraversal(root.left)
+            res.append(root.val)
+            res += self.inorderTraversal(root.right)
+        return res
 
-S1 = Shark()
-S2 = Shark()
+input = [1, None, 2, 3]
 
-print(S1.fish_type)
+tree = TreeNode(1)
+tree.left = None
+tree.right = TreeNode(2)
+tree.right.left = TreeNode(3)
 
-S1.fish_type = "Goldfish"
-
-print(S1.fish_type)
-print(S2.fish_type)
-print(Shark.fish_type)
-
-print(S1.counter)
-print(S2.counter)
-print(Shark.counter)
+X = Solution()
+print(X.inorderTraversal(tree))
