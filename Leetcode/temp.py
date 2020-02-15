@@ -1,25 +1,37 @@
-class Shark:
-    fish_type = "Shark"
-    counter = 0
-    
-    def __init__(self) -> None:
-        type(self).counter += 1
-    
-    def __del__(self) -> None:
-        type(self).counter -= 1
+from typing import List
 
+class Solution:
+    def findMinHeightTrees(self, n: int, edges: List[List[int]]) -> List[int]:
+        result = []
+        
+        return result
 
-S1 = Shark()
-S2 = Shark()
+n = 10
+edges = [[0, 3], [1, 3], [2, 3], [4, 3], [5, 4],[2,8],[2,7],[7,9]]
 
-print(S1.fish_type)
+# values that share one node are at the same height
+# aim for distance root to node = n - shared edges (TBD) (Hypotesis)
 
-S1.fish_type = "Goldfish"
+# Cut all leafs.
+# Repeat until you have exactly 2 or 1 nodes
+from collections import defaultdict
+H = defaultdict(int)
+for edge in edges:
+    H[edge[0]] += 1
+    H[edge[1]] += 1
 
-print(S1.fish_type)
-print(S2.fish_type)
-print(Shark.fish_type)
+from copy import deepcopy
+working_edges = deepcopy(edges)
 
-print(S1.counter)
-print(S2.counter)
-print(Shark.counter)
+to_remove = []
+
+for (key, value) in list(H.items()):
+    if value==1:
+        to_remove.append(key)
+
+for rem in to_remove:
+     for edge in working_edges:
+         if rem in edge:
+             working_edges.remove(edge)
+print(working_edges)
+print(H)
