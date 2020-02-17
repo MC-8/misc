@@ -23,7 +23,7 @@ What is a node: "Each node in your graph should be associated with a location in
 from collections import namedtuple
 from random import randint, random
 
-node = namedtuple('node', 'x y z')
+node = namedtuple('node', 'ID x y z')
 
 def print_output(nodes, edges):
     for key, value in nodes.items():
@@ -34,13 +34,13 @@ def print_output(nodes, edges):
 
 edges = {}
 nodes = {}
-nodes[0] = node(2, 3.1, 1.2)
-nodes[1] = node(3.5, 2.6, 10.1)
-nodes[2] = node(4.1, 3.4, 7.44)
+nodes[0] = node(0, 2, 3.1, 1.2)
+nodes[1] = node(1, 3.5, 2.6, 10.1)
+nodes[2] = node(2, 4.1, 3.4, 7.44)
 edges[0] = (0, 1)
 edges[1] = (1, 2)
 
-print_output(nodes, edges)
+#print_output(nodes, edges)
 
 
 
@@ -68,49 +68,79 @@ class NetworkGenerator(ABC):
         self.E[self._edges_count] = (IDnode1, IDnode2)
         self._edges_count += 1
 
+    def print_network(self):
+        for key, value in self.N.items():
+            print(f'{value.x}, {value.y}, {value.z}')
 
+        for key, value in self.E.items():
+            print(f'{value[0]}, {value[1]}')
+
+    def save_network(self):
+        with open('net.out', 'w') as fh:
+            for key, value in self.N.items():
+                fh.writelines(f'{value.x}, {value.y}, {value.z}\n')
+
+            for key, value in self.E.items():
+                fh.writelines(f'{value[0]}, {value[1]}\n')
+
+from copy import deepcopy
 class FractalNetwork(NetworkGenerator):
     """
     Fractal network generates branches of main branch and sub branches.
     Intersections are not treated as nodes.
     """
-    params = namedtuple('FractalGenParams', 'starting_point, max_length, base_angle, angle_deviation, max_recursion')
-
+    params = {}
     def __init__(self):
-        self.params.starting_point = node(0,0,0)
-        self.params.max_length = 1
-        self.params.base_angle = 90
-        self.params.angle_deviation = 0
-        self.params.max_recursion = 1
+        self.params['starting_point'] = node(0,0,0,0)
+        self.params['max_length'] = 100
+        self.params['base_angle'] = 0
+        self.params['angle_deviation'] = 0
+        self.params['max_recursion'] = 3
+        self.params['scale_factor'] = 0.7
+        self.params['branch_factor_range'] = range(0, 2)
 
-    def set_params(self, params: FractalGenParams) -> None:
+    def set_params(self, params: dict) -> None:
         self.params = params
 
-    def generate_roads(self) -> (dict, dict):
+    def generate(self) -> (dict, dict):
         
-        def recursive_generation(params: FractalGenParams, direction_angle: int=0) -> None:
-            self.add_node(params.starting_point)
+        
+        def recursive_generation(depth:int, params: dict, direction_angle: int=0) -> None:
+            if depth==0: return
+
             
-            n_branches = randint(1, 3)
-            p1 = params.starting_point
+            p1 = params['starting_point']
 
-            for branch in range(n_branches):
-                new_angle = randint(params.base_angle - params.angle_deviation, params.base_angle + params.angle_deviation)
-                new_length = params.max_length*random()
+            for branch in params['branch_factor_range']:
+                new_angle = radians(direction_angle) + radians(params['base_angle']) #radians(randint(params['base_angle'] - params['angle_deviation'], params['base_angle'] + params['angle_deviation']))
+                new_length = params['max_length'] #*random()
 
-                branch_point = node(p1.x + new_length*cos(new_angle), p1.y + new_length*sin(new_angle), 0)
-                
-                ID1 = self._nodes_count
+                branch_point = node(self._nodes_count, p1.x + new_length*cos(new_angle), p1.y + new_length*sin(new_angle), 0) # For now don't do Z branches
                 self.add_node(branch_point)
-                ID2 = self._nodes_count
+                self.connect_nodes(p1.ID, branch_point.ID)
+                p1 = branch_point
+                
+                new_p = deepcopy(params)
+                new_p['max_length'] *= new_p['scale_factor']
+                new_p['starting_point'] = branch_point
 
-                self.connect_nodes(ID1, ID2)
+                recursive_generation(depth=depth-1, params=new_p, direction_angle=direction_angle + 45)
+                recursive_generation(depth=depth-1, params=new_p, direction_angle=direction_angle - 45)
 
-
+        starting_direction = 0
+        
+        self.add_node(self.params['starting_point'])
+        recursive_generation(depth = self.params['max_recursion'], params = self.params, direction_angle=starting_direction)
+        recursive_generation(depth = self.params['max_recursion'], params = self.params, direction_angle=starting_direction+90)
+        recursive_generation(depth = self.params['max_recursion'], params = self.params, direction_angle=starting_direction+180)
+        recursive_generation(depth = self.params['max_recursion'], params = self.params, direction_angle=starting_direction-90)
 
         return (self.E, self.N)
 
 
 
-gen = FractalNetwork()
+FN = FractalNetwork()
+FN.generate()
+FN.print_network()
+FN.save_network()
 
