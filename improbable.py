@@ -20,6 +20,7 @@ What is a node: "Each node in your graph should be associated with a location in
 -> Graphic representation (edge is not necessarily a straight line!)
 
 """
+from typing import Tuple, List
 from collections import namedtuple
 from random import randint, random
 
@@ -56,7 +57,7 @@ class NetworkGenerator(ABC):
     _edges_count = 0
 
     @abstractmethod
-    def generate(self) -> (dict, dict):
+    def generate(self) -> Tuple[dict, dict]:
         # Do something to 
         return (self.E, self.N)
 
@@ -64,8 +65,8 @@ class NetworkGenerator(ABC):
         self.N[self._nodes_count] = node
         self._nodes_count += 1
 
-    def connect_nodes(self, IDnode1:int, IDnode2:int) -> None:
-        self.E[self._edges_count] = (IDnode1, IDnode2)
+    def connect_nodes(self, node1:node, node2:node) -> None:
+        self.E[self._edges_count] = (node1.ID, node2.ID)
         self._edges_count += 1
 
     def print_network(self):
@@ -96,15 +97,14 @@ class FractalNetwork(NetworkGenerator):
         self.params['base_angle'] = 0
         self.params['angle_deviation'] = 0
         self.params['max_recursion'] = 3
-        self.params['scale_factor'] = 0.7
+        self.params['scale_factor'] = 0.8
         self.params['branch_factor_range'] = range(0, 2)
 
     def set_params(self, params: dict) -> None:
         self.params = params
 
-    def generate(self) -> (dict, dict):
-        
-        
+    def generate(self) -> Tuple[dict, dict]:
+
         def recursive_generation(depth:int, params: dict, direction_angle: int=0) -> None:
             if depth==0: return
 
@@ -112,12 +112,12 @@ class FractalNetwork(NetworkGenerator):
             p1 = params['starting_point']
 
             for branch in params['branch_factor_range']:
-                new_angle = radians(direction_angle) + radians(params['base_angle']) #radians(randint(params['base_angle'] - params['angle_deviation'], params['base_angle'] + params['angle_deviation']))
-                new_length = params['max_length'] #*random()
+                new_angle = radians(direction_angle + params['base_angle'])
+                new_length = params['max_length']#*randint(10,20)/20
 
                 branch_point = node(self._nodes_count, p1.x + new_length*cos(new_angle), p1.y + new_length*sin(new_angle), 0) # For now don't do Z branches
                 self.add_node(branch_point)
-                self.connect_nodes(p1.ID, branch_point.ID)
+                self.connect_nodes(p1, branch_point)
                 p1 = branch_point
                 
                 new_p = deepcopy(params)
@@ -137,8 +137,34 @@ class FractalNetwork(NetworkGenerator):
 
         return (self.E, self.N)
 
+from itertools import product
+class RegularNetwork(NetworkGenerator):
+    """Starts with an ordinated topology (e.g. grid, or radial) 
+    and uses a vector field to distort node coordinates"""
+    params = {}
+    def __init__(self):
+        self.params['starting_point'] = node(0,0,0,0)
 
+    def generate(self) -> Tuple[dict, dict]:
+        prev_node = self.params['starting_point']
+        
+        for x,y in product(range(1,10,2), range(1,10,2)):
+            new_node = node(ID=self._nodes_count, x=x, y=y, z=0)
+            self.add_node(new_node)
+            self.connect_nodes(prev_node, new_node)
+            prev_node = new_node
 
+        return (self.E, self.N)
+
+class GridNetwork(RegularNetwork):
+    pass
+class RadialNetwork(RegularNetwork):
+    pass
+
+# RN = RegularNetwork()
+# RN.generate()
+# RN.print_network()
+# RN.save_network()
 FN = FractalNetwork()
 FN.generate()
 FN.print_network()
