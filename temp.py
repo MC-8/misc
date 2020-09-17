@@ -1,9 +1,9 @@
 # 64. Minimum path sum
 from collections import deque, namedtuple
-from typing import List
+from typing import List, Union
 from copy import deepcopy
 class Solution:
-    def minPathSum(self, grid: List[List[int]]) -> int:
+    def minPathSum(self, grid: List[List[int]]) -> Union[int, None]:
         Q = deque()
 
         state = namedtuple('state', 'coord sumpath')
@@ -36,7 +36,7 @@ class Solution:
                 if sol < best_solution:
                     best_solution = sol
 
-        return best_solution
+        return int(best_solution)
 
 grid = [
   [1,3,1],
