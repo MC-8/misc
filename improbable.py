@@ -44,9 +44,9 @@ edges[1] = (1, 2)
 
 
 
-from abc import ABC, abstractmethod
 from math import radians, cos, sin
 
+from abc import ABC, abstractmethod
 class NetworkGenerator(ABC):
     """ Not a Python "generator"
     """
