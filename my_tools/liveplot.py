@@ -60,8 +60,10 @@ class LivePlotApp(object):
                 figs[fig_n].line(*params[0], **params[1], source=self.source)
         for f in figs:
             doc.add_root(f)
-
-        ##########################################################
+        ###################################################################
+        # If you don't need/want to use add_figure, or add_line_to_figure
+        # you can just make a fixed layout
+        ###################################################################
         # fig1 = figure(title="FIG 1")
         # fig1.line("t", "x", line_color="pink", source=self.source)
         # fig1.line("t", "y", line_color="red", source=self.source)
@@ -71,7 +73,7 @@ class LivePlotApp(object):
         # fig2 = figure(title="FIG 2")
         # fig2.line('t', 'other', source=self.source)
         # doc.add_root(fig2)
-        ##########################################################
+        ###################################################################
 
         doc.add_periodic_callback(self.locked_update, self.update_step_ms)
 
