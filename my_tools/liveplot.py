@@ -33,7 +33,7 @@ class LivePlotApp(object):
         try:
             x = self.cc.recv()  # This is blocking
         except EOFError:
-            pass
+            return
         self.source.stream(x, rollover=self.stream_rollover)
 
     def start_io_loop(self, child_conn):
@@ -107,14 +107,14 @@ if __name__ == '__main__':
     t_sent = time.perf_counter()
 
     while True:
-        time.sleep(0.1)
+        time.sleep(0.1) # Data process may be fast
         t = time.perf_counter()
-        dict_data['other'] = [random.randint(1, 50)]
+        dict_data['other'] = [random.randint(-50, 50)]
         dict_data['t'] = [time.perf_counter()]
         dict_data['x'] = [7 if i < 110 else 15]
         dict_data['y'] = [i % 100]
-        dict_data['z'] = [10+10*math.sin(t*2*math.pi)]
-        if (t-t_sent > dt):
+        dict_data['z'] = [10*math.sin(t*2*math.pi)]
+        if (t-t_sent > dt): # Send at another (lower) rate
             t_sent = time.perf_counter()
             app.parent_conn.send(dict_data)
             i += 1
