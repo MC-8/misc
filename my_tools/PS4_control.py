@@ -58,7 +58,7 @@ class PS4ControllerWrist(object):
         assert isinstance(roll_speed, float)
         self.data['roll_speed'] = roll_speed
 
-    def update(self):
+    def __update(self):
         # To keep pygame in sync with the system, you will need to call
         # pygame.event.pump() internally process pygame event handlers to keep
         # everything current. Usually, this should be called once per game
@@ -75,28 +75,39 @@ class PS4ControllerWrist(object):
             (self.__axis_to_roll_delta(self.j.get_axis(axes_name_map['LEFT ROLL INCREASE'])) - \
              self.j.get_button(button_name_map['LEFT ROLL DECREASE'])) * \
                  self.data['roll_speed']
-        
+
         self.data['R-roll'] += \
             (self.__axis_to_roll_delta(self.j.get_axis(axes_name_map['RIGHT ROLL INCREASE'])) - \
              self.j.get_button(button_name_map['RIGHT ROLL DECREASE'])) * \
                  self.data['roll_speed']
 
-        self.data['L-grasp'] = self.j.get_button(button_name_map['LEFT GRASP'])
-        self.data['R-grasp'] = self.j.get_button(button_name_map['RIGHT GRASP'])
+        self.data['L-grasp'] = self.j.get_button(button_name_map['LEFT GRASP']) > 0
+        self.data['R-grasp'] = self.j.get_button(button_name_map['RIGHT GRASP']) > 0
+
+        def saturate(val, min_val, max_val):
+            x = val
+            x = min_val if val<min_val else x
+            x = max_val if val>max_val else x
+            return x
+        
+        self.data['L-roll'] = saturate(self.data['L-roll'], -90, 90)
+        self.data['R-roll'] = saturate(self.data['R-roll'], -90, 90)
 
     def get(self):
-        self.update()
+        self.__update()
         return self.data
 
+    def quit(self):
+        self.j.quit()
 
 if __name__=="__main__":
     import time
-    ctrl = PS4ControllerWrist(3)
+    ctrl = PS4ControllerWrist(1)
     try:
         while True:
             print(ctrl.get())
-            time.sleep(0.2)
+            time.sleep(0.02)
 
     except KeyboardInterrupt:
         print("EXITING NOW")
-        j.quit()
+        ctrl.quit()
